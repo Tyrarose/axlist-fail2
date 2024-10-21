@@ -1,0 +1,51 @@
+# Python-specific
+*.pyc
+__pycache__/
+.pytest_cache/
+*.pyo
+*.pyd
+
+# Node.js
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Virtual environments
+config/
+venv/
+env/
+.venv/
+.env
+
+# Firebase configuration
+config.json
+
+# IDE specific
+*.swp
+*.DS_Store
+.vercel
+
+
+# Logs
+*.log
+
+
+# Other files or folders to ignore
+*.sqlite3
+*.db
+
+
+# IDE specific files
+.vscode/
+.idea/
+
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
