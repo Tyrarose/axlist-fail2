@@ -6,44 +6,36 @@
     <title>Axlist</title>
     <meta name="description" content="WeTrading Rules Checklist for my boyfie axl uwu.">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="static\style.css"> <!-- Link to external CSS -->
-    <!-- Favicon -->
-    <link rel="icon" href="static\favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="static/style.css"> <!-- Link to external CSS -->
+    <link rel="icon" href="static/favicon.ico" type="image/x-icon">
     <link rel="manifest" href="/manifest.json">
-
 </head>
 <body>
     <div class="container">
         <h1>My Trading Rules Checklist</h1>
 
-        <form action="/add_rule" method="POST" class="mb-3">
+        <div class="mb-3">
             <div class="input-group">
-                <input type="text" name="new_rule" class="form-control" placeholder="Add a new rule" required>
+                <input type="text" id="new_rule" class="form-control" placeholder="Add a new rule" required>
                 <div class="input-group-append">
-                    <button type="submit" class="btn btn-primary btn-add">Add Rule</button>
+                    <button type="button" onclick="addRule()" class="btn btn-primary btn-add">Add Rule</button>
                 </div>
             </div>
-        </form>
+        </div>
 
-        <ul class="list-group mb-3">
+        <ul class="list-group mb-3" id="rules">
             {% for rule in rules %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <input type="checkbox" class="custom-checkbox" id="rule-{{ rule.id }}" {% if rule.checked %} checked {% endif %} onclick="toggleRule({{ rule.id }})">
-                    <label class="checkbox-label {% if rule.checked %} checked {% endif %}" for="rule-{{ rule.id }}">{{ rule.text }}</label>
-                    <form action="/delete_rule/{{ rule.id }}" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
-                    </form>
+                <li class="list-group-item d-flex justify-content-between align-items-center" id="rule-{{ rule.id }}">
+                    <input type="checkbox" class="custom-checkbox" id="checkbox-{{ rule.id }}" {% if rule.checked %} checked {% endif %} onchange="toggleRule('{{ rule.id }}')">
+                    <label class="checkbox-label {% if rule.checked %} checked {% endif %}" for="checkbox-{{ rule.id }}">{{ rule.text }}</label>
+                    <button onclick="deleteRule('{{ rule.id }}')" class="btn btn-danger btn-sm">🗑️</button>
                 </li>
             {% endfor %}
         </ul>
 
         <div class="text-center mb-3">
-            <form action="/reset_rules" method="POST" style="display: inline;">
-                <button type="submit" class="btn btn-secondary">Uncheck all boxes</button>
-            </form>
-            <form action="/delete_all" method="POST" style="display: inline;">
-                <button type="submit" class="btn btn-danger ml-5">Delete All Rules</button>
-            </form>
+            <button onclick="resetChecks()" class="btn btn-secondary">Uncheck all boxes</button>
+            <button onclick="deleteAllRules()" class="btn btn-danger ml-5">Delete All Rules</button>
         </div>
     </div>
 
@@ -52,26 +44,82 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
-        function toggleRule(ruleId) {
-            const checkbox = document.getElementById(`rule-${ruleId}`);
+        // Fetch rules initially
+        async function fetchRules() {
+            const response = await fetch('/get_rules');
+            const rules = await response.json();
+            renderRules(rules);
+        }
+
+        // Render rules to the DOM
+        function renderRules(rules) {
+            const rulesList = document.getElementById('rules');
+            rulesList.innerHTML = ''; // Clear existing rules
+            rules.forEach(rule => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.id = rule-${rule.id};
+                li.innerHTML = 
+                    <input type="checkbox" class="custom-checkbox" id="checkbox-${rule.id}" ${rule.checked ? 'checked' : ''} onchange="toggleRule('${rule.id}')">
+                    <label class="checkbox-label ${rule.checked ? 'checked' : ''}" for="checkbox-${rule.id}">${rule.rule}</label>
+                    <button onclick="deleteRule('${rule.id}')" class="btn btn-danger btn-sm">🗑️</button>
+                ;
+                rulesList.appendChild(li);
+            });
+        }
+
+        // Add new rule
+        async function addRule() {
+            const newRule = document.getElementById('new_rule').value;
+            const response = await fetch('/add_rule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ new_rule: newRule })
+            });
+            if (response.ok) {
+                document.getElementById('new_rule').value = ''; // Clear input
+                fetchRules(); // Refresh the rules list
+            } else {
+                console.error('Failed to add rule');
+            }
+        }
+
+        // Toggle rule checked state
+        async function toggleRule(ruleId) {
+            const checkbox = document.getElementById(checkbox-${ruleId});
             const checked = checkbox.checked;
 
-            fetch(`/toggle_rule/${ruleId}`, {
+            await fetch(/toggle_rule/${ruleId}, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ checked: checked })
-            }).then(response => {
-                if (!response.ok) {
-                    console.error('Failed to update rule status');
-                }
-            }).catch(error => {
-                console.error('Error:', error);
             });
         }
-    </script>
-    <script>
+
+        // Delete rule
+        async function deleteRule(ruleId) {
+            await fetch(/delete_rule/${ruleId}, { method: 'POST' });
+            document.getElementById(rule-${ruleId}).remove(); // Remove from DOM without refreshing
+        }
+
+        // Reset all checks
+        async function resetChecks() {
+            await fetch('/reset_rules', { method: 'POST' });
+            fetchRules(); // Refresh the rules list
+        }
+
+        // Delete all rules
+        async function deleteAllRules() {
+            await fetch('/delete_all', { method: 'POST' });
+            fetchRules(); // Refresh the rules list
+        }
+
+        // Initial fetch
+        fetchRules();
+
+        // Service Worker registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
@@ -82,6 +130,5 @@
             });
         }
     </script>
-    
 </body>
 </html>

@@ -91,8 +91,16 @@ h1 {
 
 .checkbox-label.checked {
     text-decoration: line-through; /* Strikethrough effect */
+    color: gray;
 }
 
 .input-group input {
     border-radius: 20px; /* Rounded input */
 }
+
+
+.checked {
+    text-decoration: line-through;
+    color: gray; /* Optional: Change color for checked rules */
+}
+
